@@ -1,4 +1,4 @@
-﻿///// <reference path="Microsoft.JSInterop.d.ts"/>
+///// <reference path="Microsoft.JSInterop.d.ts"/>
 import idb from '../node_modules/idb/lib/idb';
 import { DB, UpgradeDB, ObjectStore, Transaction } from '../node_modules/idb/lib/idb';
 import { IDbStore, IIndexSearch, IIndexSpec, IStoreRecord, IStoreSchema, IDotNetInstanceWrapper, IDbInformation } from './InteropInterfaces';
@@ -76,6 +76,27 @@ export class IndexedDbManager {
         const result = await objectStore.add(itemToSave, record.key);
 
         return `Added new record with id ${result}`;
+    }
+    
+    public addRecords = async (records: Array<IStoreRecord | any>, storeName: string | null): Promise<string[]> => {
+        let ids: string[] = [];
+
+        if (storeName !== null) {
+            for (let record of records) {
+                const tx = this.getTransaction(this.dbInstance, storeName, 'readwrite');
+                const objectStore = tx.objectStore(storeName);
+                record = this.checkForKeyPath(objectStore, record);
+                const result = await objectStore.add(record);
+                ids.push(`Added new record with id ${result}`);
+            }
+        }
+        else {
+            for (let record of records) {
+                await this.addRecord(record);
+            }
+        }
+        
+        return ids;
     }
 
     public updateRecord = async (record: IStoreRecord): Promise<string> => {

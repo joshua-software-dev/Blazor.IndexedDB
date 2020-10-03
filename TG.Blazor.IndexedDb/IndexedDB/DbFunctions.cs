@@ -1,4 +1,4 @@
-﻿namespace TG.Blazor.IndexedDB
+namespace TG.Blazor.IndexedDB
 {
     /// <summary>
     /// Constants defining the Javascript functions that can be called.
@@ -8,6 +8,7 @@
         public const string CreateDb = "createDb";
         public const string DeleteDb = "deleteDb";
         public const string AddRecord = "addRecord";
+        public const string AddRecords = "addRecords";
         public const string UpdateRecord = "updateRecord";
         public const string GetRecords = "getRecords";
         public const string GetRecordsCount = "getRecordsCount";

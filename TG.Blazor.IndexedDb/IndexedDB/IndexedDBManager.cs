@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -125,6 +125,47 @@ namespace TG.Blazor.IndexedDB
             {
                 var result = await CallJavascript<StoreRecord<T>, string>(DbFunctions.AddRecord, recordToAdd);
                 RaiseNotification(IndexDBActionOutCome.Successful, result);
+            }
+            catch (JSException e)
+            {
+                RaiseNotification(IndexDBActionOutCome.Failed, e.Message);
+            }
+        }
+        
+        /// <summary>
+        /// Adds a range of new records/objects to the specified store
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="recordsToAdd">An IEnumerable of StoreRecord that provides the store name and the data to add</param>
+        /// <returns></returns>
+        public async Task AddRecords<T>(IEnumerable<StoreRecord<T>> recordsToAdd)
+        {
+            await EnsureDbOpen();
+            try
+            {
+                var result = await CallJavascript<IEnumerable<StoreRecord<T>>, string[]>(DbFunctions.AddRecords, recordsToAdd);
+                RaiseNotification(IndexDBActionOutCome.Successful, string.Join(", \n", result));
+            }
+            catch (JSException e)
+            {
+                RaiseNotification(IndexDBActionOutCome.Failed, e.Message);
+            }
+        }
+        
+        /// <summary>
+        /// Adds a range of new records/objects to the specified store
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="storeName">The name of the store to which to add the records.</param>
+        /// <param name="recordsToAdd">An IEnumerable containing data objects to add to the store.</param>
+        /// <returns></returns>
+        public async Task AddRecords<T>(string storeName, IEnumerable<T> recordsToAdd)
+        {
+            await EnsureDbOpen();
+            try
+            {
+                var result = await CallJavascript<string[]>(DbFunctions.AddRecords, recordsToAdd, storeName);
+                RaiseNotification(IndexDBActionOutCome.Successful, string.Join(", \n", result));
             }
             catch (JSException e)
             {
