@@ -1,4 +1,4 @@
-namespace TG.Blazor.IndexedDB
+﻿namespace TG.Blazor.IndexedDB
 {
     /// <summary>
     /// Constants defining the Javascript functions that can be called.
@@ -18,7 +18,9 @@ namespace TG.Blazor.IndexedDB
         public const string GetRecordById = "getRecordById";
         public const string ClearStore = "clearStore";
         public const string GetRecordByIndex = "getRecordByIndex";
+        public const string GetRecordByIndexPartialMatch = "getRecordByIndexPartialMatch";
         public const string GetAllRecordsByIndex = "getAllRecordsByIndex";
+        public const string GetAllRecordsByIndexPartialMatch = "getAllRecordsByIndexPartialMatch";
         public const string GetDbInfo = "getDbInfo";
     }
 }

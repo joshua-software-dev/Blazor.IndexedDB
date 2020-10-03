@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -364,6 +364,35 @@ namespace TG.Blazor.IndexedDB
         }
         
         /// <summary>
+        /// Returns the first record that matches a query against a given index. Only works with string indexes.
+        /// The string comparison is done at the javascript level due to Blazor limitations.
+        /// </summary>
+        /// <typeparam name="TInput"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="searchQuery">an instance of StoreIndexQuery</param>
+        /// <param name="caseInsensitive"></param>
+        /// <returns></returns>
+        public async Task<TResult> GetRecordByIndexPartialMatch<TResult>(StoreIndexQuery<string> searchQuery, bool caseInsensitive = false)
+        {
+            await EnsureDbOpen();
+
+            try
+            {
+                var result = await CallJavascript<TResult>(
+                    DbFunctions.GetRecordByIndexPartialMatch, 
+                    searchQuery, 
+                    caseInsensitive
+                );
+                return result;
+            }
+            catch (JSException jse)
+            {
+                RaiseNotification(IndexDBActionOutCome.Failed, jse.Message);
+                return default;
+            }
+        }
+        
+        /// <summary>
         /// Gets all of the records that match a given query in the specified index.
         /// </summary>
         /// <typeparam name="TInput"></typeparam>
@@ -386,13 +415,47 @@ namespace TG.Blazor.IndexedDB
                 return default;
             }
         }
+        
+        /// <summary>
+        /// Gets all of the records that match a given query in the specified index. Only works with string indexes.
+        /// The string comparison is done at the javascript level due to Blazor limitations.
+        /// </summary>
+        /// <typeparam name="TInput"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="searchQuery"></param>
+        /// <param name="caseInsensitive"></param>
+        /// <returns></returns>
+        public async Task<IList<TResult>> GetAllRecordsByIndexPartialMatch<TResult>(StoreIndexQuery<string> searchQuery, bool caseInsensitive = false)
+        {
+            await EnsureDbOpen();
+            try
+            {
+                var results = await CallJavascript<IList<TResult>>(
+                    DbFunctions.GetAllRecordsByIndexPartialMatch, 
+                    searchQuery, 
+                    caseInsensitive
+                );
+
+                RaiseNotification(
+                    IndexDBActionOutCome.Successful, 
+                    $"Retrieved {results.Count} records, for {searchQuery.QueryValue} on index {searchQuery.IndexName}"
+                );
+
+                return results;
+            }
+            catch (JSException jse)
+            {
+                RaiseNotification(IndexDBActionOutCome.Failed, jse.Message);
+                return default;
+            }
+        }
 
         [JSInvokable("Callback")]
         public void CalledFromJS(string message)
         {
             Console.WriteLine($"called from JS: {message}");
         }
-        
+
         private async Task<TResult> CallJavascript<TData, TResult>(string functionName, TData data)
         {
             return await _jsRuntime.InvokeAsync<TResult>($"{InteropPrefix}.{functionName}", data);

@@ -1,4 +1,4 @@
-///// <reference path="Microsoft.JSInterop.d.ts"/>
+﻿///// <reference path="Microsoft.JSInterop.d.ts"/>
 import idb from '../node_modules/idb/lib/idb';
 import { DB, UpgradeDB, ObjectStore, Transaction } from '../node_modules/idb/lib/idb';
 import { IDbStore, IIndexSearch, IIndexSpec, IStoreRecord, IStoreSchema, IDotNetInstanceWrapper, IDbInformation } from './InteropInterfaces';
@@ -172,6 +172,33 @@ export class IndexedDbManager {
         await tx.complete;
         return results;
     }
+    
+    public getRecordByIndexPartialMatch = async (searchData: IIndexSearch, caseInsensitive: boolean): Promise<any> => {
+        const tx = this.getTransaction(this.dbInstance, searchData.storename, 'readonly');
+        let results: any[] = [];
+
+        tx.objectStore(searchData.storename)
+            .index(searchData.indexName)
+            .iterateCursor(cursor => {
+                if (!cursor || results.length > 0) {
+                    return;
+                }
+
+                let key = caseInsensitive
+                    ? cursor.key.toString().toUpperCase()
+                    : cursor.key.toString();
+
+                if (key.includes(caseInsensitive ? searchData.queryValue.toUpperCase() : searchData.queryValue)) {
+                    results.push(cursor.value);
+                }
+
+                cursor.continue();
+            });
+
+        await tx.complete;
+
+        return results[0];
+    }
 
     public getAllRecordsByIndex = async (searchData: IIndexSearch): Promise<any> => {
         const tx = this.getTransaction(this.dbInstance, searchData.storename, 'readonly');
@@ -185,6 +212,33 @@ export class IndexedDbManager {
                 }
 
                 if (cursor.key === searchData.queryValue) {
+                    results.push(cursor.value);
+                }
+
+                cursor.continue();
+            });
+
+        await tx.complete;
+
+        return results;
+    }
+    
+    public getAllRecordsByIndexPartialMatch = async (searchData: IIndexSearch, caseInsensitive: boolean): Promise<any> => {
+        const tx = this.getTransaction(this.dbInstance, searchData.storename, 'readonly');
+        let results: any[] = [];
+
+        tx.objectStore(searchData.storename)
+            .index(searchData.indexName)
+            .iterateCursor(cursor => {
+                if (!cursor) {
+                    return;
+                }
+                
+                let key = caseInsensitive
+                    ? cursor.key.toString().toUpperCase()
+                    : cursor.key.toString();
+
+                if (key.includes(caseInsensitive ? searchData.queryValue.toUpperCase() : searchData.queryValue)) {
                     results.push(cursor.value);
                 }
 
